@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   }
 
   const { prompt } = req.body;
-
   if (!prompt) {
     return res.status(400).json({ error: "Prompt missing" });
   }
@@ -21,24 +20,24 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: "You are an AI website builder. Generate complete HTML code only."
+            content:
+              "You are a website builder. Always return ONLY complete valid HTML with inline CSS. Do not add explanations."
           },
           {
             role: "user",
-            content: prompt
+            content: `Create a professional website based on this description: ${prompt}`
           }
-        ],
-        temperature: 0.7
+        ]
       })
     });
 
     const data = await response.json();
+    const html = data.choices?.[0]?.message?.content;
 
-    res.status(200).json({
-      html: data.choices[0].message.content
+    return res.status(200).json({
+      html: html || "<h1>Failed to generate website</h1>"
     });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 }
