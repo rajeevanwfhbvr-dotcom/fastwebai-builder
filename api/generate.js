@@ -12,31 +12,30 @@ export default async function handler(req, res) {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
-            content:
-              "You are a website builder. Always return ONLY complete valid HTML with inline CSS. Do not add explanations."
+            content: "You generate clean full HTML websites with inline CSS. Only return HTML."
           },
           {
             role: "user",
-            content: `Create a professional website based on this description: ${prompt}`
+            content: prompt
           }
-        ]
+        ],
+        temperature: 0.7
       })
     });
 
     const data = await response.json();
     const html = data.choices?.[0]?.message?.content;
 
-    return res.status(200).json({
-      html: html || "<h1>Failed to generate website</h1>"
-    });
+    return res.status(200).json({ html });
+
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
