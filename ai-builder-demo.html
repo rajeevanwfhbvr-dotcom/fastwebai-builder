@@ -1,60 +1,102 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FastWeb AI Builder — Demo</title>
-<style>
-body{font-family:Arial,Helvetica,sans-serif;background:#0f1724;color:#fff;margin:0;display:flex;height:100vh}
-.left{width:40%;padding:20px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,0.03)}
-.right{flex:1;display:flex;flex-direction:column}
-#chat{height:72vh;overflow:auto;padding:12px;background:#0b1220;border-radius:8px}
-.msg{margin-bottom:10px}
-.user{color:#cbd5e1}
-.ai{color:#a7f3d0}
-.controls{margin-top:10px;display:flex;gap:8px}
-input[type=text]{flex:1;padding:10px;border-radius:6px;border:1px solid #222;background:#071127;color:#fff}
-button{padding:10px 14px;border-radius:6px;border:none;background:#7c3aed;color:#fff}
-.previewWrap{padding:12px;flex:1;background:#fff}
-iframe{width:100%;height:100%;border:1px solid #ddd}
-.small{font-size:12px;color:#94a3b8}
-</style>
-<div class="left">
-  <h2>FastWeb AI Builder — Demo</h2>
-  <div id="chat"></div>
-  <div class="controls">
-    <input id="prompt" placeholder="Describe the website... (e.g. 'Create a homepage for a bakery in Chennai...')">
-    <button id="send">Create</button>
-  </div>
-  <p class="small">This demo requires a serverless function to call OpenAI. See README for deployment steps.</p>
-</div>
-<div class="right">
-  <div class="previewWrap">
-    <iframe id="preview" srcdoc="<h3>Preview will appear here</h3>"></iframe>
-  </div>
-</div>
-<script>
-const chat = document.getElementById('chat');
-const prompt = document.getElementById('prompt');
-const send = document.getElementById('send');
-const preview = document.getElementById('preview');
+  <meta charset="UTF-8" />
+  <title>FastWeb AI Builder — Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-function addMsg(cls, text){ const d = document.createElement('div'); d.className='msg '+cls; d.innerText = text; chat.appendChild(d); chat.scrollTop = chat.scrollHeight; }
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f1724;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+    }
+    .left {
+      width: 40%;
+      padding: 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    .right {
+      flex: 1;
+      background: #fff;
+      color: #000;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    textarea {
+      flex: 1;
+      width: 100%;
+      resize: none;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #071127;
+      color: #fff;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #7c3aed;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #6d28d9;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
 
-send.onclick = async ()=>{
-  const p = prompt.value.trim(); if(!p) return;
-  addMsg('user','You: '+p); prompt.value='';
-  addMsg('ai','AI: generating...');
-  try{
-    const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: p }) });
-    const j = await res.json();
-    if(!j.ok){ chat.lastChild.innerText = 'AI: error '+(j.error||''); return; }
-    let html = j.html || (j.raw && JSON.stringify(j.raw).slice(0,2000));
-    html = html.replace(/```(?:html)?/g,'').replace(/```/g,'').trim();
-    html = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,'');
-    preview.srcdoc = html;
-    chat.lastChild.innerText = 'AI: generated preview';
-  }catch(err){ chat.lastChild.innerText = 'AI: failed '+err.message; }
-};
-</script>
+  <div class="left">
+    <h1>FastWeb AI Builder — Demo</h1>
+    <textarea id="prompt" placeholder="Describe the website (e.g. Gym website with pricing and contact page)"></textarea>
+    <button onclick="generate()">Create</button>
+  </div>
+
+  <div class="right">
+    <h3>Preview will appear here</h3>
+    <iframe id="preview"></iframe>
+  </div>
+
+  <script>
+    async function generate() {
+      const prompt = document.getElementById("prompt").value;
+      if (!prompt) {
+        alert("Please enter a description");
+        return;
+      }
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+
+      document.getElementById("preview").srcdoc =
+        data.html || "<h2>Error generating site</h2>";
+    }
+  </script>
+
+</body>
 </html>
