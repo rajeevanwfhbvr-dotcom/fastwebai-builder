@@ -1,3 +1,5 @@
+import fetch from "node-fetch";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -23,28 +25,36 @@ export default async function handler(req, res) {
             {
               role: "system",
               content:
-                "You are a web developer. Generate a complete HTML page with CSS inside <style>.",
+                "You generate full HTML pages with inline CSS. Output ONLY HTML.",
             },
             {
               role: "user",
               content: prompt,
             },
           ],
+          temperature: 0.7,
         }),
       }
     );
 
     const data = await response.json();
 
-    const html =
-      data.choices?.[0]?.message?.content ||
-      "<h2>No HTML generated</h2>";
+    // 🔴 LOG EVERYTHING
+    console.log("OPENAI RESPONSE:", JSON.stringify(data, null, 2));
+
+    if (!data.choices || !data.choices[0]) {
+      return res.status(200).json({
+        html: `<pre>${JSON.stringify(data, null, 2)}</pre>`,
+      });
+    }
+
+    const html = data.choices[0].message.content;
 
     res.status(200).json({ html });
-  } catch (error) {
+  } catch (err) {
+    console.error("SERVER ERROR:", err);
     res.status(500).json({
-      error: "OpenAI error",
-      details: error.message,
+      html: `<h2>Server error</h2><pre>${err.message}</pre>`,
     });
   }
 }
