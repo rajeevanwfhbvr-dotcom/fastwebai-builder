@@ -9,26 +9,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: `Generate a full HTML website (with CSS inside <style>) based on this description:\n${prompt}`,
-      }),
-    });
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a web developer. Generate a complete HTML page with CSS inside <style>.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        }),
+      }
+    );
 
     const data = await response.json();
 
     const html =
-      data.output?.[0]?.content?.[0]?.text ||
-      "<h2>No HTML generated. Try again.</h2>";
+      data.choices?.[0]?.message?.content ||
+      "<h2>No HTML generated</h2>";
 
     res.status(200).json({ html });
   } catch (error) {
-    res.status(500).json({ error: "AI error", details: error.message });
+    res.status(500).json({
+      error: "OpenAI error",
+      details: error.message,
+    });
   }
 }
