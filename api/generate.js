@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   }
 
   const { prompt } = req.body;
-
   if (!prompt) {
     return res.status(400).json({ error: "Prompt missing" });
   }
@@ -18,18 +17,18 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        input: `Generate a clean HTML website based on this description:\n${prompt}`,
+        input: `Generate a full HTML website (with CSS inside <style>) based on this description:\n${prompt}`,
       }),
     });
 
     const data = await response.json();
 
-    const text =
-      data.output_text ||
-      "<h2>AI did not return HTML. Try again.</h2>";
+    const html =
+      data.output?.[0]?.content?.[0]?.text ||
+      "<h2>No HTML generated. Try again.</h2>";
 
-    res.status(200).json({ html: text });
-  } catch (err) {
-    res.status(500).json({ error: "AI error", details: err.message });
+    res.status(200).json({ html });
+  } catch (error) {
+    res.status(500).json({ error: "AI error", details: error.message });
   }
 }
