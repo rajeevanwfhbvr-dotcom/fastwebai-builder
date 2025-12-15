@@ -3,24 +3,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { prompt } = req.body;
-  if (!prompt) {
-    return res.status(400).json({ error: "Prompt missing" });
-  }
-
   try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt missing" });
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
-            content: "You generate clean full HTML websites with inline CSS. Only return HTML."
+            content: "Generate a complete HTML website with inline CSS"
           },
           {
             role: "user",
@@ -32,11 +33,16 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    const html = data.choices?.[0]?.message?.content;
 
-    return res.status(200).json({ html });
+    const html =
+      data?.choices?.[0]?.message?.content ||
+      "<h2>AI returned no content</h2>";
+
+    res.status(200).json({ html });
 
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    res.status(500).json({
+      html: `<pre>Error: ${err.message}</pre>`
+    });
   }
 }
